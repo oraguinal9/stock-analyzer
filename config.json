@@ -1,0 +1,18 @@
+{
+  "api_keys": {
+    "em_api_key": "em_yLbSsg0pQvuU84DfS80bk3feU14OgJuB",
+    "qwen_api_key": "sk-e30a0a3d188a49b3b4dcfedb5ced4cd3"
+  },
+  "app": {
+    "host": "127.0.0.1",
+    "port": 8000,
+    "debug": false
+  },
+  "output": {
+    "reports_dir": "./data/reports",
+    "cache_dir": "./data/cache"
+  },
+  "database": {
+    "path": "./data/stock_analyzer.db"
+  }
+}
