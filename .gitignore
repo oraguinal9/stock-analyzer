@@ -1,0 +1,37 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+*.egg
+.venv/
+venv/
+env/
+
+# 数据目录（运行时生成）
+data/cache/*.csv
+data/cache/*.txt
+data/logs/*.log
+data/reports/*.md
+data/*.db
+
+# 配置（保留模板）
+.env
+config.json
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# 构建产物
+dist/
+build/
+*.spec
+
+# Docker
+*.log
