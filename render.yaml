@@ -1,0 +1,25 @@
+services:
+  # Web 服务 - 股票分析助手
+  - type: web
+    name: stock-analyzer
+    env: python
+    region: oregon
+    plan: free
+    branch: main
+    rootDir: stock-analyzer-web
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: EM_API_KEY
+        sync: false
+      - key: QWEN_API_KEY
+        sync: false
+      - key: HOST
+        value: 0.0.0.0
+      - key: PORT
+        value: 10000
+    healthCheckPath: /home
+    disk:
+      name: data
+      mountPath: /opt/render/project/src/data
+      sizeGB: 1
