@@ -53,20 +53,33 @@ async def query_stock(data: StockQuery) -> Dict[str, Any]:
 async def analyze_stock(data: StockQuery) -> Dict[str, Any]:
     """分析股票"""
     # 使用东方财富 HTTP API
-    quote = em_data.get_stock_quote(data.query)
+    quote_dict = em_data.get_stock_quote(data.query)
     
-    if not quote or not quote.get('name'):
+    if not quote_dict or not quote_dict.get('name'):
         raise HTTPException(status_code=404, detail="未找到股票")
     
-    # 转换为 StockData 对象供 AI 分析器使用
-    from app.models.stock import StockData
-    stock_data = StockData(**quote)
+    # 转换为 StockQuote 和 StockData 对象供 AI 分析器使用
+    from app.models.stock import StockQuote, StockData
+    stock_quote = StockQuote(
+        code=quote_dict.get('code', ''),
+        name=quote_dict.get('name', ''),
+        price=quote_dict.get('price', 0.0),
+        change_pct=quote_dict.get('change_pct', 0.0),
+        change_amount=quote_dict.get('change_amount', 0.0),
+        pe=quote_dict.get('pe', 20.0),
+        pb=quote_dict.get('pb', 3.0),
+        turnover=quote_dict.get('turnover', 0.0),
+        volume_ratio=quote_dict.get('volume_ratio', 1.0),
+        market_cap=quote_dict.get('market_cap', 0.0),
+        float_market_cap=quote_dict.get('float_market_cap', 0.0),
+    )
+    stock_data = StockData(quote=stock_quote)
     report = ai_analyzer.analyze_stock(stock_data)
     
     return {
         "success": True,
         "data": {
-            "quote": quote,
+            "quote": quote_dict,
             "report": report
         }
     }
