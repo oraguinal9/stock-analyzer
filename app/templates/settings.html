@@ -1,0 +1,123 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>设置 - 股票分析助手</title>
+    <script src="/static/js/tailwind.js"></script>
+    <script defer src="/static/js/alpine.min.js"></script>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 min-h-screen" x-data="settingsApp()" x-init="init()">
+    <!-- 导航栏 -->
+    <nav class="bg-white dark:bg-gray-800 shadow-lg">
+        <div class="container mx-auto px-4 py-4">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center space-x-2">
+                    <span class="text-2xl">⚙️</span>
+                    <h1 class="text-xl font-bold text-gray-800 dark:text-white">设置</h1>
+                </div>
+                <div class="flex space-x-1">
+                    <a href="/home" class="px-4 py-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300">首页</a>
+                    <a href="/sector" class="px-4 py-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300">热门板块</a>
+                    <a href="/screener" class="px-4 py-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300">智能选股</a>
+                    <a href="/favorites" class="px-4 py-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300">自选股</a>
+                    <a href="/settings" class="px-4 py-2 rounded-lg bg-blue-500 text-white">设置</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container mx-auto px-4 py-8 max-w-2xl">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+            <h2 class="text-xl font-bold text-gray-800 dark:text-white mb-6">API 配置</h2>
+            
+            <div class="mb-6">
+                <label class="block text-gray-700 dark:text-gray-300 mb-2">东方财富妙想 API Key</label>
+                <input type="text" x-model="emApiKey" :placeholder="emKeyHint" class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-white focus:border-blue-500 focus:outline-none">
+            </div>
+            
+            <div class="mb-6">
+                <label class="block text-gray-700 dark:text-gray-300 mb-2">千问 API Key</label>
+                <input type="text" x-model="qwenApiKey" :placeholder="qwenKeyHint" class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-white focus:border-blue-500 focus:outline-none">
+            </div>
+            
+            <button @click="saveSettings()" class="w-full px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-semibold transition">
+                💾 保存配置
+            </button>
+            
+            <div x-show="message" x-cloak class="mt-4 p-4 rounded-lg" :class="messageType === 'success' ? 'bg-green-100 dark:bg-green-900' : 'bg-red-100 dark:bg-red-900'">
+                <p :class="messageType === 'success' ? 'text-green-700 dark:text-green-200' : 'text-red-700 dark:text-red-200'" x-text="message"></p>
+            </div>
+        </div>
+        
+        <div class="mt-6 bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+            <h2 class="text-xl font-bold text-gray-800 dark:text-white mb-4">💡 获取 API Key</h2>
+            <ul class="space-y-2 text-gray-600 dark:text-gray-400">
+                <li>• 东方财富妙想：<a href="https://ai.eastmoney.com/mxClaw" class="text-blue-500 hover:underline" target="_blank">https://ai.eastmoney.com/mxClaw</a></li>
+                <li>• 千问 API：<a href="https://dashscope.console.aliyun.com/" class="text-blue-500 hover:underline" target="_blank">https://dashscope.console.aliyun.com/</a></li>
+            </ul>
+        </div>
+    </main>
+    
+    <script>
+        function settingsApp() {
+            return {
+                emApiKey: '',
+                qwenApiKey: '',
+                emKeyHint: '未配置',
+                qwenKeyHint: '未配置',
+                message: '',
+                messageType: 'success',
+                
+                async init() {
+                    try {
+                        const res = await fetch('/api/settings')
+                        const data = await res.json()
+                        if (data.success && data.data) {
+                            this.emKeyHint = data.data.em_api_key ? '已配置 (' + data.data.em_api_key + ')' : '未配置'
+                            this.qwenKeyHint = data.data.qwen_api_key ? '已配置 (' + data.data.qwen_api_key + ')' : '未配置'
+                        }
+                    } catch (err) {
+                        console.error(err)
+                    }
+                },
+                
+                async saveSettings() {
+                    try {
+                        const body = {}
+                        if (this.emApiKey) body.em_api_key = this.emApiKey
+                        if (this.qwenApiKey) body.qwen_api_key = this.qwenApiKey
+                        
+                        if (Object.keys(body).length === 0) {
+                            this.message = '请输入需要更新的 API Key'
+                            this.messageType = 'error'
+                            return
+                        }
+                        
+                        const res = await fetch('/api/settings', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(body)
+                        })
+                        
+                        if (res.ok) {
+                            this.message = '配置已保存！'
+                            this.messageType = 'success'
+                            this.emApiKey = ''
+                            this.qwenApiKey = ''
+                            await this.init()
+                        } else {
+                            this.message = '保存失败'
+                            this.messageType = 'error'
+                        }
+                    } catch (err) {
+                        this.message = '保存失败：' + err.message
+                        this.messageType = 'error'
+                    }
+                    
+                    setTimeout(() => this.message = '', 3000)
+                }
+            }
+        }
+    </script>
+</body>
+</html>

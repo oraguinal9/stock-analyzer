@@ -1,0 +1,232 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📈 股票分析助手 - 首页</title>
+    <script src="/static/js/tailwind.js"></script>
+    <script defer src="/static/js/alpine.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        [x-cloak] { display: none !important; }
+    </style>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 min-h-screen" x-data="app()" x-init="init()">
+    <!-- 导航栏 -->
+    <nav class="bg-white dark:bg-gray-800 shadow-lg">
+        <div class="container mx-auto px-4">
+            <div class="flex justify-between items-center py-4">
+                <div class="flex items-center space-x-2">
+                    <span class="text-2xl">📈</span>
+                    <h1 class="text-xl font-bold text-gray-800 dark:text-white">股票分析助手</h1>
+                </div>
+                <div class="flex space-x-1">
+                    <a href="/home" class="px-4 py-2 rounded-lg bg-blue-500 text-white">首页</a>
+                    <a href="/sector" class="px-4 py-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300">热门板块</a>
+                    <a href="/screener" class="px-4 py-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300">智能选股</a>
+                    <a href="/favorites" class="px-4 py-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300">自选股</a>
+                    <a href="/settings" class="px-4 py-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300">设置</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主内容区 -->
+    <main class="container mx-auto px-4 py-8">
+        <!-- 欢迎区域 -->
+        <div class="text-center mb-12">
+            <h2 class="text-4xl font-bold text-gray-800 dark:text-white mb-4">
+                📈 欢迎使用股票分析助手
+            </h2>
+        </div>
+
+        <!-- 搜索框 -->
+        <div class="max-w-2xl mx-auto mb-12">
+            <div class="flex space-x-2">
+                <input 
+                    type="text" 
+                    x-model="searchQuery"
+                    @keydown.enter="searchStock()"
+                    placeholder="输入股票代码或名称（如：002594 或 比亚迪）"
+                    class="flex-1 px-6 py-4 rounded-lg border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-800 dark:text-white text-lg focus:border-blue-500 focus:outline-none"
+                >
+                <button 
+                    @click="searchStock()"
+                    :disabled="loading"
+                    class="px-8 py-4 rounded-lg bg-blue-500 hover:bg-blue-600 text-white text-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition"
+                >
+                    <span x-show="!loading">🔍 分析</span>
+                    <span x-show="loading">⏳ 分析中...</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- 加载状态 -->
+        <div x-show="loading" x-cloak class="text-center py-8">
+            <div class="inline-block animate-spin text-4xl">⏳</div>
+            <p class="mt-4 text-gray-600 dark:text-gray-400" x-text="loadingText"></p>
+        </div>
+
+        <!-- 错误信息 -->
+        <div x-show="error" x-cloak class="max-w-2xl mx-auto mb-8 p-4 bg-red-100 dark:bg-red-900 rounded-lg">
+            <p class="text-red-700 dark:text-red-200" x-text="error"></p>
+        </div>
+
+        <!-- 分析结果 -->
+        <div x-show="result" x-cloak class="max-w-4xl mx-auto">
+            <!-- 股票信息卡片 -->
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-6">
+                <div class="flex justify-between items-start mb-4">
+                    <div>
+                        <h3 class="text-2xl font-bold text-gray-800 dark:text-white" x-text="result?.quote?.name + ' (' + result?.quote?.code + ')'"></h3>
+                        <p class="text-gray-500 dark:text-gray-400" x-text="result?.quote?.market"></p>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-3xl font-bold" :class="result?.quote?.change_pct >= 0 ? 'text-red-500' : 'text-green-500'" x-text="formatPrice(result?.quote?.price) + ' 元'"></p>
+                        <p class="text-lg" :class="result?.quote?.change_pct >= 0 ? 'text-red-500' : 'text-green-500'" x-text="(result?.quote?.change_pct >= 0 ? '+' : '') + formatNumber(result?.quote?.change_pct) + '%'"></p>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
+                        <p class="text-sm text-gray-500 dark:text-gray-400">总市值</p>
+                        <p class="text-lg font-semibold text-gray-800 dark:text-white" x-text="formatMarketCap(result?.quote?.market_cap)"></p>
+                    </div>
+                    <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
+                        <p class="text-sm text-gray-500 dark:text-gray-400">市盈率</p>
+                        <p class="text-lg font-semibold text-gray-800 dark:text-white" x-text="formatNumber(result?.quote?.pe)"></p>
+                    </div>
+                    <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
+                        <p class="text-sm text-gray-500 dark:text-gray-400">换手率</p>
+                        <p class="text-lg font-semibold text-gray-800 dark:text-white" x-text="formatNumber(result?.quote?.turnover) + '%'"></p>
+                    </div>
+                    <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
+                        <p class="text-sm text-gray-500 dark:text-gray-400">量比</p>
+                        <p class="text-lg font-semibold text-gray-800 dark:text-white" x-text="formatNumber(result?.quote?.volume_ratio)"></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AI 分析报告 -->
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h4 class="text-xl font-bold text-gray-800 dark:text-white">🤖 AI 分析报告</h4>
+                    <div class="flex items-center space-x-4">
+                        <span class="px-4 py-2 rounded-full text-white font-semibold" 
+                              :class="{
+                                  'bg-red-500': result?.report?.rating === '看涨' || result?.report?.rating === '强烈看涨',
+                                  'bg-gray-500': result?.report?.rating === '中性',
+                                  'bg-green-500': result?.report?.rating === '看跌' || result?.report?.rating === '强烈看跌'
+                              }"
+                              x-text="result?.report?.rating">
+                        </span>
+                        <span class="text-lg text-gray-600 dark:text-gray-400">
+                            评分：<span class="font-bold" x-text="result?.report?.score"></span>/100
+                        </span>
+                    </div>
+                </div>
+                
+                <div class="prose dark:prose-invert max-w-none" x-html="renderMarkdown(result?.report?.content)"></div>
+            </div>
+
+            <!-- 操作按钮 -->
+            <div class="flex space-x-4">
+                <button @click="searchQuery = ''; result = null" class="px-6 py-3 rounded-lg bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-white font-semibold transition">
+                    🔙 继续搜索
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        function app() {
+            return {
+                searchQuery: '',
+                loading: false,
+                loadingText: '',
+                error: '',
+                result: null,
+                
+                init() {
+                    // 检查暗色模式
+                    if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                        document.documentElement.classList.add('dark')
+                    }
+                    
+                    // 检查 URL 参数
+                    const urlParams = new URLSearchParams(window.location.search)
+                    const stockCode = urlParams.get('stock')
+                    if (stockCode) {
+                        this.searchQuery = stockCode
+                        this.searchStock()
+                    }
+                },
+                
+                async searchStock() {
+                    if (!this.searchQuery.trim()) return
+                    
+                    this.loading = true
+                    this.loadingText = '正在查询股票数据...'
+                    this.error = ''
+                    this.result = null
+                    
+                    try {
+                        this.loadingText = '正在进行 AI 分析（约 30 秒）...'
+                        
+                        // 直接调用分析接口（内含查询）
+                        const analyzeRes = await fetch('/api/stock/analyze', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ query: this.searchQuery })
+                        })
+                        
+                        if (!analyzeRes.ok) {
+                            throw new Error('未找到股票或分析失败，请检查代码')
+                        }
+                        
+                        const analyzeData = await analyzeRes.json()
+                        this.result = analyzeData.data
+                        
+                    } catch (err) {
+                        this.error = err.message
+                    } finally {
+                        this.loading = false
+                    }
+                },
+                
+                formatPrice(price) {
+                    return price ? price.toFixed(2) : '0.00'
+                },
+                
+                formatNumber(num) {
+                    return num ? num.toFixed(2) : '0.00'
+                },
+                
+                formatMarketCap(cap) {
+                    if (!cap) return '0 亿'
+                    if (cap >= 1e8) return (cap / 1e8).toFixed(2) + ' 亿'
+                    return cap.toFixed(2)
+                },
+                
+                renderMarkdown(text) {
+                    if (!text) return ''
+                    if (typeof marked !== 'undefined') {
+                        return marked.parse(text)
+                    }
+                    // 备用简单渲染
+                    return text
+                        .replace(/^### (.*$)/gim, '<h3 class="text-lg font-bold mt-4 mb-2">$1</h3>')
+                        .replace(/^## (.*$)/gim, '<h2 class="text-xl font-bold mt-6 mb-3">$1</h2>')
+                        .replace(/^# (.*$)/gim, '<h1 class="text-2xl font-bold mt-8 mb-4">$1</h1>')
+                        .replace(/\*\*(.*)\*\*/gim, '<strong>$1</strong>')
+                        .replace(/\*(.*)\*/gim, '<em>$1</em>')
+                        .replace(/^- (.*$)/gim, '<li class="ml-4">$1</li>')
+                        .replace(/\n/gim, '<br>')
+                }
+            }
+        }
+    </script>
+</body>
+</html>
+
+

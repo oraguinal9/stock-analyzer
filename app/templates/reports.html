@@ -1,0 +1,209 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>历史报告 - 股票分析助手</title>
+    <script src="/static/js/tailwind.js"></script>
+    <script defer src="/static/js/alpine.min.js"></script>
+    <style>[x-cloak] { display: none !important; }</style>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 min-h-screen" x-data="reportsApp()" x-init="init()">
+    <!-- 导航栏 -->
+    <nav class="bg-white dark:bg-gray-800 shadow-lg">
+        <div class="container mx-auto px-4 py-4">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center space-x-2">
+                    <span class="text-2xl">📄</span>
+                    <h1 class="text-xl font-bold text-gray-800 dark:text-white">历史报告</h1>
+                </div>
+                <div class="flex space-x-1">
+                    <a href="/home" class="px-4 py-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300">首页</a>
+                    <a href="/sector" class="px-4 py-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300">热门板块</a>
+                    <a href="/screener" class="px-4 py-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300">智能选股</a>
+                    <a href="/favorites" class="px-4 py-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300">自选股</a>
+                    <a href="/settings" class="px-4 py-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300">设置</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主内容区 -->
+    <main class="container mx-auto px-4 py-8">
+        <h2 class="text-3xl font-bold text-gray-800 dark:text-white mb-6">📄 历史分析报告</h2>
+        
+        <!-- 搜索框 -->
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-8">
+            <div class="flex space-x-2">
+                <input 
+                    type="text" 
+                    x-model="searchQuery"
+                    @input="filterReports()"
+                    placeholder="搜索股票代码或名称..."
+                    class="flex-1 px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-white focus:border-blue-500 focus:outline-none"
+                >
+            </div>
+        </div>
+
+        <!-- 加载状态 -->
+        <div x-show="loading" x-cloak class="text-center py-8">
+            <div class="inline-block animate-spin text-4xl">⏳</div>
+            <p class="mt-4 text-gray-600 dark:text-gray-400">正在加载报告...</p>
+        </div>
+
+        <!-- 错误信息 -->
+        <div x-show="error" x-cloak class="p-4 bg-red-100 dark:bg-red-900 rounded-lg mb-6">
+            <p class="text-red-700 dark:text-red-200" x-text="error"></p>
+        </div>
+
+        <!-- 报告列表 -->
+        <div x-show="filteredReports.length > 0" x-cloak class="grid gap-4">
+            <template x-for="report in filteredReports" :key="report.id">
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 hover:shadow-xl transition">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <h3 class="text-xl font-bold text-gray-800 dark:text-white" x-text="report.stock_name + ' (' + report.stock_code + ')'"></h3>
+                            <p class="text-sm text-gray-500 dark:text-gray-400" x-text="formatDate(report.created_at)"></p>
+                        </div>
+                        <div class="flex items-center space-x-4">
+                            <span class="px-4 py-2 rounded-full text-white font-semibold text-sm"
+                                  :class="{
+                                      'bg-red-500': report.rating === '看涨' || report.rating === '强烈看涨',
+                                      'bg-gray-500': report.rating === '中性',
+                                      'bg-green-500': report.rating === '看跌' || report.rating === '强烈看跌'
+                                  }"
+                                  x-text="report.rating">
+                            </span>
+                            <span class="text-lg text-gray-600 dark:text-gray-400">
+                                <span class="font-bold" x-text="report.score"></span>/100
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <p class="text-gray-600 dark:text-gray-400 mb-4 line-clamp-2" x-text="report.summary"></p>
+                    
+                    <div class="flex space-x-2">
+                        <button @click="viewReport(report)" class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm">
+                            📖 查看详情
+                        </button>
+                        <button @click="deleteReport(report.id)" class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg text-sm">
+                            🗑️ 删除
+                        </button>
+                    </div>
+                </div>
+            </template>
+        </div>
+
+        <!-- 空状态 -->
+        <div x-show="!loading && filteredReports.length === 0" x-cloak class="text-center py-12 bg-white dark:bg-gray-800 rounded-xl shadow-lg">
+            <div class="text-6xl mb-4">📄</div>
+            <p class="text-xl text-gray-600 dark:text-gray-400" x-text="reports.length === 0 ? '暂无历史报告' : '没有找到匹配的报告'"></p>
+        </div>
+    </main>
+
+    <!-- 报告详情弹窗 -->
+    <div x-show="selectedReport" x-cloak class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50" @click.self="selectedReport = null">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div class="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-6 flex justify-between items-center">
+                <h3 class="text-2xl font-bold text-gray-800 dark:text-white" x-text="selectedReport?.stock_name + ' (' + selectedReport?.stock_code + ')'"></h3>
+                <button @click="selectedReport = null" class="text-gray-500 hover:text-gray-700 text-2xl">×</button>
+            </div>
+            <div class="p-6">
+                <div class="flex items-center space-x-4 mb-6">
+                    <span class="px-4 py-2 rounded-full text-white font-semibold"
+                          :class="{
+                              'bg-red-500': selectedReport?.rating === '看涨' || selectedReport?.rating === '强烈看涨',
+                              'bg-gray-500': selectedReport?.rating === '中性',
+                              'bg-green-500': selectedReport?.rating === '看跌' || selectedReport?.rating === '强烈看跌'
+                          }"
+                          x-text="selectedReport?.rating">
+                    </span>
+                    <span class="text-lg text-gray-600 dark:text-gray-400">
+                        评分：<span class="font-bold" x-text="selectedReport?.score"></span>/100
+                    </span>
+                    <span class="text-gray-500 dark:text-gray-400" x-text="formatDate(selectedReport?.created_at)"></span>
+                </div>
+                <div class="prose dark:prose-invert max-w-none" x-html="renderMarkdown(selectedReport?.content)"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function reportsApp() {
+            return {
+                loading: false,
+                error: '',
+                reports: [],
+                filteredReports: [],
+                searchQuery: '',
+                selectedReport: null,
+                
+                async init() {
+                    await this.loadReports()
+                },
+                
+                async loadReports() {
+                    this.loading = true
+                    try {
+                        // 从 localStorage 读取
+                        const saved = localStorage.getItem('reports')
+                        if (saved) {
+                            this.reports = JSON.parse(saved)
+                            this.filteredReports = [...this.reports]
+                        }
+                    } catch (err) {
+                        this.error = '加载失败：' + err.message
+                    } finally {
+                        this.loading = false
+                    }
+                },
+                
+                filterReports() {
+                    if (!this.searchQuery.trim()) {
+                        this.filteredReports = [...this.reports]
+                        return
+                    }
+                    
+                    const query = this.searchQuery.toLowerCase()
+                    this.filteredReports = this.reports.filter(r => 
+                        r.stock_code.toLowerCase().includes(query) ||
+                        r.stock_name.toLowerCase().includes(query)
+                    )
+                },
+                
+                viewReport(report) {
+                    this.selectedReport = report
+                },
+                
+                deleteReport(id) {
+                    if (!confirm('确定删除这份报告吗？')) return
+                    
+                    this.reports = this.reports.filter(r => r.id !== id)
+                    this.filteredReports = this.filteredReports.filter(r => r.id !== id)
+                    localStorage.setItem('reports', JSON.stringify(this.reports))
+                },
+                
+                formatDate(isoString) {
+                    if (!isoString) return ''
+                    const date = new Date(isoString)
+                    return date.toLocaleString('zh-CN')
+                },
+                
+                renderMarkdown(text) {
+                    if (!text) return ''
+                    return text
+                        .replace(/^### (.*$)/gim, '<h3 class="text-lg font-bold mt-4 mb-2">$1</h3>')
+                        .replace(/^## (.*$)/gim, '<h2 class="text-xl font-bold mt-6 mb-3">$1</h2>')
+                        .replace(/^# (.*$)/gim, '<h1 class="text-2xl font-bold mt-8 mb-4">$1</h1>')
+                        .replace(/\*\*(.*)\*\*/gim, '<strong>$1</strong>')
+                        .replace(/\*(.*)\*/gim, '<em>$1</em>')
+                        .replace(/^- (.*$)/gim, '<li class="ml-4">$1</li>')
+                        .replace(/\n/gim, '<br>')
+                }
+            }
+        }
+    </script>
+</body>
+</html>
+
+

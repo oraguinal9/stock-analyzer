@@ -1,0 +1,241 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智能选股 - 股票分析助手</title>
+    <script src="/static/js/tailwind.js"></script>
+    <script defer src="/static/js/alpine.min.js"></script>
+    <style>[x-cloak] { display: none !important; }</style>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 min-h-screen" x-data="screenerApp()">
+    <!-- 导航栏 -->
+    <nav class="bg-white dark:bg-gray-800 shadow-lg">
+        <div class="container mx-auto px-4 py-4">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center space-x-2">
+                    <span class="text-2xl">🎯</span>
+                    <h1 class="text-xl font-bold text-gray-800 dark:text-white">智能选股</h1>
+                </div>
+                <div class="flex space-x-1">
+                    <a href="/home" class="px-4 py-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300">首页</a>
+                    <a href="/sector" class="px-4 py-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300">热门板块</a>
+                    <a href="/screener" class="px-4 py-2 rounded-lg bg-blue-500 text-white">智能选股</a>
+                    <a href="/favorites" class="px-4 py-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300">自选股</a>
+                    <a href="/settings" class="px-4 py-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300">设置</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主内容区 -->
+    <main class="container mx-auto px-4 py-8">
+        <!-- 页面标题 -->
+        <div class="text-center mb-8">
+            <h2 class="text-3xl font-bold text-gray-800 dark:text-white mb-2">🎯 智能选股</h2>
+            <p class="text-gray-600 dark:text-gray-400">选择策略 · 一键筛选 · 快速找到好股票</p>
+        </div>
+
+        <!-- 策略选择区 -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <!-- 价值投资 -->
+            <button @click="useStrategy('value')" class="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900 dark:to-green-800 rounded-xl shadow-lg p-6 text-left hover:shadow-xl hover:scale-105 transition transform">
+                <div class="text-4xl mb-3">🛡️</div>
+                <h3 class="text-xl font-bold text-green-800 dark:text-green-200 mb-2">价值投资</h3>
+                <p class="text-sm text-green-700 dark:text-green-300 mb-3">PE&lt;20 + ROE&gt;15% + 市值前 50</p>
+                <p class="text-xs text-gray-600 dark:text-gray-400">适合中长线，选择低估值高盈利的龙头股</p>
+            </button>
+
+            <!-- 成长龙头 -->
+            <button @click="useStrategy('growth')" class="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900 dark:to-blue-800 rounded-xl shadow-lg p-6 text-left hover:shadow-xl hover:scale-105 transition transform">
+                <div class="text-4xl mb-3">🚀</div>
+                <h3 class="text-xl font-bold text-blue-800 dark:text-blue-200 mb-2">成长龙头</h3>
+                <p class="text-sm text-blue-700 dark:text-blue-300 mb-3">营收增长&gt;20% + ROE&gt;10% + 北向增持</p>
+                <p class="text-xs text-gray-600 dark:text-gray-400">高成长 + 外资认可，适合成长型投资者</p>
+            </button>
+
+            <!-- 今日强势 -->
+            <button @click="useStrategy('hot')" class="bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900 dark:to-red-800 rounded-xl shadow-lg p-6 text-left hover:shadow-xl hover:scale-105 transition transform">
+                <div class="text-4xl mb-3">📈</div>
+                <h3 class="text-xl font-bold text-red-800 dark:text-red-200 mb-2">今日强势</h3>
+                <p class="text-sm text-red-700 dark:text-red-300 mb-3">涨幅&gt;5% + 换手&gt;3% + 主力净流入</p>
+                <p class="text-xs text-gray-600 dark:text-gray-400">短线热点，适合快进快出的激进投资者</p>
+            </button>
+
+            <!-- 高股息防御 -->
+            <button @click="useStrategy('dividend')" class="bg-gradient-to-br from-yellow-50 to-yellow-100 dark:from-yellow-900 dark:to-yellow-800 rounded-xl shadow-lg p-6 text-left hover:shadow-xl hover:scale-105 transition transform">
+                <div class="text-4xl mb-3">💰</div>
+                <h3 class="text-xl font-bold text-yellow-800 dark:text-yellow-200 mb-2">高股息防御</h3>
+                <p class="text-sm text-yellow-700 dark:text-yellow-300 mb-3">PB&lt;2 + 市值前 100 + PE&lt;30</p>
+                <p class="text-xs text-gray-600 dark:text-gray-400">低估值大盘股，适合稳健收息策略</p>
+            </button>
+
+            <!-- 科技成长 -->
+            <button @click="useStrategy('tech')" class="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900 dark:to-purple-800 rounded-xl shadow-lg p-6 text-left hover:shadow-xl hover:scale-105 transition transform">
+                <div class="text-4xl mb-3">💻</div>
+                <h3 class="text-xl font-bold text-purple-800 dark:text-purple-200 mb-2">科技成长</h3>
+                <p class="text-sm text-purple-700 dark:text-purple-300 mb-3">ROE&gt;15% + 营收增长&gt;20% + 市值前 50</p>
+                <p class="text-xs text-gray-600 dark:text-gray-400">高盈利 + 高增长，聚焦科技龙头</p>
+            </button>
+
+            <!-- 突破新高 -->
+            <button @click="useStrategy('breakout')" class="bg-gradient-to-br from-pink-50 to-pink-100 dark:from-pink-900 dark:to-pink-800 rounded-xl shadow-lg p-6 text-left hover:shadow-xl hover:scale-105 transition transform">
+                <div class="text-4xl mb-3">🎯</div>
+                <h3 class="text-xl font-bold text-pink-800 dark:text-pink-200 mb-2">突破新高</h3>
+                <p class="text-sm text-pink-700 dark:text-pink-300 mb-3">涨幅&gt;3% + 换手&gt;3%</p>
+                <p class="text-xs text-gray-600 dark:text-gray-400">技术面强势，适合趋势跟踪</p>
+            </button>
+
+            <!-- 低风险稳健 -->
+            <button @click="useStrategy('lowrisk')" class="bg-gradient-to-br from-cyan-50 to-cyan-100 dark:from-cyan-900 dark:to-cyan-800 rounded-xl shadow-lg p-6 text-left hover:shadow-xl hover:scale-105 transition transform">
+                <div class="text-4xl mb-3">🛡️</div>
+                <h3 class="text-xl font-bold text-cyan-800 dark:text-cyan-200 mb-2">低风险稳健</h3>
+                <p class="text-sm text-cyan-700 dark:text-cyan-300 mb-3">PE&lt;30 + PB&lt;2 + ROE&gt;10%</p>
+                <p class="text-xs text-gray-600 dark:text-gray-400">估值合理 + 盈利稳定，风险较低</p>
+            </button>
+
+            <!-- 北向重仓 -->
+            <button @click="useStrategy('north')" class="bg-gradient-to-br from-indigo-50 to-indigo-100 dark:from-indigo-900 dark:to-indigo-800 rounded-xl shadow-lg p-6 text-left hover:shadow-xl hover:scale-105 transition transform">
+                <div class="text-4xl mb-3">💎</div>
+                <h3 class="text-xl font-bold text-indigo-800 dark:text-indigo-200 mb-2">北向重仓</h3>
+                <p class="text-sm text-indigo-700 dark:text-indigo-300 mb-3">北向增持 + 市值前 50 + ROE&gt;15%</p>
+                <p class="text-xs text-gray-600 dark:text-gray-400">跟随外资，选择北向资金青睐的龙头</p>
+            </button>
+        </div>
+
+        <!-- 加载状态 -->
+        <div x-show="loading" x-cloak class="text-center py-12">
+            <div class="inline-block animate-spin text-4xl">⏳</div>
+            <p class="mt-4 text-gray-600 dark:text-gray-400">正在筛选符合条件的股票...</p>
+        </div>
+
+        <!-- 错误信息 -->
+        <div x-show="error" x-cloak class="bg-red-100 dark:bg-red-900 rounded-lg p-4 mb-8">
+            <p class="text-red-700 dark:text-red-200" x-text="error"></p>
+        </div>
+
+        <!-- 筛选结果 -->
+        <div x-show="results.length > 0" x-cloak class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold text-gray-800 dark:text-white">📊 筛选结果</h3>
+                <span class="text-sm text-gray-500 dark:text-gray-400">共 <span x-text="results.length"></span> 只股票</span>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="border-b border-gray-200 dark:border-gray-700">
+                            <th class="text-left py-3 px-4 text-gray-600 dark:text-gray-400">代码</th>
+                            <th class="text-left py-3 px-4 text-gray-600 dark:text-gray-400">名称</th>
+                            <th class="text-right py-3 px-4 text-gray-600 dark:text-gray-400">股价</th>
+                            <th class="text-right py-3 px-4 text-gray-600 dark:text-gray-400">涨跌幅</th>
+                            <th class="text-right py-3 px-4 text-gray-600 dark:text-gray-400">PE</th>
+                            <th class="text-right py-3 px-4 text-gray-600 dark:text-gray-400">市值</th>
+                            <th class="text-center py-3 px-4 text-gray-600 dark:text-gray-400">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <template x-for="(stock, index) in results" :key="index">
+                            <tr class="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700">
+                                <td class="py-3 px-4 font-mono text-gray-800 dark:text-white" x-text="stock.code"></td>
+                                <td class="py-3 px-4 font-bold text-gray-800 dark:text-white" x-text="stock.name"></td>
+                                <td class="py-3 px-4 text-right text-gray-800 dark:text-white" x-text="stock.price != null ? stock.price.toFixed(2) : '-'"></td>
+                                <td class="py-3 px-4 text-right font-bold" :class="stock.change_pct >= 0 ? 'text-red-500' : 'text-green-500'" x-text="stock.change_pct != null ? (stock.change_pct >= 0 ? '+' : '') + stock.change_pct.toFixed(2) + '%' : '-'"></td>
+                                <td class="py-3 px-4 text-right text-gray-600 dark:text-gray-400" x-text="stock.pe != null ? stock.pe.toFixed(2) : '-'"></td>
+                                <td class="py-3 px-4 text-right text-gray-600 dark:text-gray-400" x-text="formatMarketCap(stock.market_cap)"></td>
+                                <td class="py-3 px-4 text-center">
+                                    <a :href="'/home?stock=' + stock.code" class="text-blue-500 hover:underline text-sm">分析</a>
+                                </td>
+                            </tr>
+                        </template>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 空状态 -->
+        <div x-show="!loading && results.length === 0 && searched" x-cloak class="text-center py-12 bg-white dark:bg-gray-800 rounded-xl shadow-lg">
+            <div class="text-6xl mb-4">😕</div>
+            <p class="text-gray-500 dark:text-gray-400 text-lg">暂无符合条件的股票</p>
+            <p class="text-sm text-gray-400 dark:text-gray-500 mt-2">尝试减少筛选条件或使用热门策略</p>
+            <button @click="reset()" class="mt-4 px-6 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm">重置条件</button>
+        </div>
+    </main>
+
+    <script>
+        function screenerApp() {
+            return {
+                currentStrategy: '',
+                results: [],
+                loading: false,
+                error: '',
+                searched: false,
+                
+                useStrategy(type) {
+                    console.log('Strategy clicked:', type)
+                    this.currentStrategy = type
+                    this.search(type)
+                },
+                
+                async search(strategyType) {
+                    console.log('Searching with strategy:', strategyType)
+                    this.loading = true
+                    this.error = ''
+                    this.searched = true
+                    this.results = []
+                    
+                    const strategyQueries = {
+                        'value': '市盈率小于 20 且 ROE 大于 15% 且 市值前 50',
+                        'growth': '营收增长大于 20% 且 ROE 大于 10% 且 北向资金增持',
+                        'hot': '涨幅大于 5% 且 换手率大于 3% 且 主力净流入',
+                        'dividend': '市净率小于 2 且 市值前 100 且 市盈率小于 30',
+                        'tech': 'ROE 大于 15% 且 营收增长大于 20% 且 市值前 50',
+                        'breakout': '涨幅大于 3% 且 换手率大于 3%',
+                        'lowrisk': '市盈率小于 30 且 市净率小于 2 且 ROE 大于 10%',
+                        'north': '北向资金增持 且 市值前 50 且 ROE 大于 15%'
+                    }
+                    
+                    try {
+                        const res = await fetch('/api/screener', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ 
+                                strategy: strategyType,
+                                query: strategyQueries[strategyType] || ''
+                            })
+                        })
+                        
+                        console.log('Response status:', res.status)
+                        
+                        if (res.ok) {
+                            const data = await res.json()
+                            console.log('Response data:', data)
+                            if (data.success && data.data && data.data.length > 0) {
+                                this.results = data.data
+                            } else if (data.data && data.data.length === 0) {
+                                this.error = data.message || '暂无符合条件的股票，尝试其他策略'
+                            } else {
+                                this.error = data.message || '筛选失败，请重试'
+                            }
+                        } else {
+                            this.error = '筛选失败，请重试'
+                        }
+                    } catch (err) {
+                        console.error('Search error:', err)
+                        this.error = '网络错误：' + err.message
+                    } finally {
+                        this.loading = false
+                    }
+                },
+                
+                formatMarketCap(cap) {
+                    if (!cap) return '0 亿'
+                    if (cap >= 1e8) return (cap / 1e8).toFixed(2) + '亿'
+                    return cap.toFixed(2)
+                }
+            }
+        }
+    </script>
+</body>
+</html>
+

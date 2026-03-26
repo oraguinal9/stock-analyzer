@@ -1,0 +1,203 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>热门板块 - 股票分析助手</title>
+    <script src="/static/js/tailwind.js"></script>
+    <script defer src="/static/js/alpine.min.js"></script>
+    <style>[x-cloak] { display: none !important; }</style>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 min-h-screen" x-data="sectorApp()">
+    <!-- 导航栏 -->
+    <nav class="bg-white dark:bg-gray-800 shadow-lg">
+        <div class="container mx-auto px-4 py-4">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center space-x-2">
+                    <span class="text-2xl">🔥</span>
+                    <h1 class="text-xl font-bold text-gray-800 dark:text-white">热门板块</h1>
+                </div>
+                <div class="flex space-x-1">
+                    <a href="/home" class="px-4 py-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300">首页</a>
+                    <a href="/sector" class="px-4 py-2 rounded-lg bg-blue-500 text-white">热门板块</a>
+                    <a href="/screener" class="px-4 py-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300">智能选股</a>
+                    <a href="/favorites" class="px-4 py-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300">自选股</a>
+                    <a href="/settings" class="px-4 py-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300">设置</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主内容区 -->
+    <main class="container mx-auto px-4 py-8">
+        <!-- 页面标题 -->
+        <div class="text-center mb-8">
+            <h2 class="text-3xl font-bold text-gray-800 dark:text-white mb-2">🔥 热门板块</h2>
+            <p class="text-gray-600 dark:text-gray-400">把握投资机会</p>
+        </div>
+
+        <!-- 2026 年重点推荐板块 -->
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-8">
+            <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-6">🏆 2026 年重点推荐板块</h3>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- 新能源/动力电池 -->
+                <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+                    <div class="flex justify-between items-start mb-3">
+                        <h4 class="font-bold text-gray-800 dark:text-white">🔋 新能源/动力电池</h4>
+                        <span class="px-2 py-1 bg-red-500 text-white text-xs rounded">⭐⭐⭐⭐⭐</span>
+                    </div>
+                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-3">全球电动化趋势 + 储能爆发 + 中国产业链领先</p>
+                    <div class="text-xs text-gray-500 dark:text-gray-400">
+                        <p><strong>代表：</strong>宁德时代、阳光电源、隆基绿能</p>
+                        <p class="mt-2 text-orange-500"><strong>风险：</strong>行业竞争加剧、产能过剩</p>
+                    </div>
+                </div>
+
+                <!-- AI/半导体 -->
+                <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+                    <div class="flex justify-between items-start mb-3">
+                        <h4 class="font-bold text-gray-800 dark:text-white">🤖 AI/半导体</h4>
+                        <span class="px-2 py-1 bg-red-500 text-white text-xs rounded">⭐⭐⭐⭐⭐</span>
+                    </div>
+                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-3">AI 大模型爆发 + 国产替代 + 政策支持</p>
+                    <div class="text-xs text-gray-500 dark:text-gray-400">
+                        <p><strong>代表：</strong>海光信息、浪潮信息、中际旭创</p>
+                        <p class="mt-2 text-orange-500"><strong>风险：</strong>技术迭代快、估值偏高</p>
+                    </div>
+                </div>
+
+                <!-- 医药生物 -->
+                <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+                    <div class="flex justify-between items-start mb-3">
+                        <h4 class="font-bold text-gray-800 dark:text-white">💊 医药生物/创新药</h4>
+                        <span class="px-2 py-1 bg-yellow-500 text-white text-xs rounded">⭐⭐⭐⭐</span>
+                    </div>
+                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-3">人口老龄化 + 创新药利好 + 估值低位</p>
+                    <div class="text-xs text-gray-500 dark:text-gray-400">
+                        <p><strong>代表：</strong>恒瑞医药、药明康德、迈瑞医疗</p>
+                        <p class="mt-2 text-orange-500"><strong>风险：</strong>集采政策、研发失败</p>
+                    </div>
+                </div>
+
+                <!-- 高端制造 -->
+                <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+                    <div class="flex justify-between items-start mb-3">
+                        <h4 class="font-bold text-gray-800 dark:text-white">🏭 高端制造/工业母机</h4>
+                        <span class="px-2 py-1 bg-yellow-500 text-white text-xs rounded">⭐⭐⭐⭐</span>
+                    </div>
+                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-3">制造业升级 + 国产替代 + 出口竞争力提升</p>
+                    <div class="text-xs text-gray-500 dark:text-gray-400">
+                        <p><strong>代表：</strong>海天精工、汇川技术、三一重工</p>
+                        <p class="mt-2 text-orange-500"><strong>风险：</strong>宏观经济波动</p>
+                    </div>
+                </div>
+
+                <!-- 消费电子 -->
+                <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+                    <div class="flex justify-between items-start mb-3">
+                        <h4 class="font-bold text-gray-800 dark:text-white">📱 消费电子/AI 终端</h4>
+                        <span class="px-2 py-1 bg-yellow-500 text-white text-xs rounded">⭐⭐⭐⭐</span>
+                    </div>
+                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-3">AI 手机/PC 换机潮 + 新品周期 + 行业复苏</p>
+                    <div class="text-xs text-gray-500 dark:text-gray-400">
+                        <p><strong>代表：</strong>立讯精密、京东方 A、鹏鼎控股</p>
+                        <p class="mt-2 text-orange-500"><strong>风险：</strong>消费需求不及预期</p>
+                    </div>
+                </div>
+
+                <!-- 中特估/高股息 -->
+                <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+                    <div class="flex justify-between items-start mb-3">
+                        <h4 class="font-bold text-gray-800 dark:text-white">🏦 中特估/高股息</h4>
+                        <span class="px-2 py-1 bg-yellow-500 text-white text-xs rounded">⭐⭐⭐⭐</span>
+                    </div>
+                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-3">央企估值重塑 + 高分红 + 防御属性</p>
+                    <div class="text-xs text-gray-500 dark:text-gray-400">
+                        <p><strong>代表：</strong>工商银行、中国神华、中国移动</p>
+                        <p class="mt-2 text-orange-500"><strong>风险：</strong>经济下行压力</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 配置建议 -->
+        <div class="bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl shadow-lg p-6 text-white mb-8">
+            <h3 class="text-xl font-bold mb-4">📊 板块配置建议</h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="bg-white bg-opacity-20 rounded-lg p-4">
+                    <h4 class="font-bold mb-2">🚀 激进型</h4>
+                    <p class="text-sm opacity-90">新能源 30% + AI 30% + 医药 20% + 消费电子 20%</p>
+                    <p class="text-xs mt-2 opacity-75">预期年化：20%~30%</p>
+                </div>
+                <div class="bg-white bg-opacity-20 rounded-lg p-4">
+                    <h4 class="font-bold mb-2">⚖️ 平衡型</h4>
+                    <p class="text-sm opacity-90">新能源 25% + AI 20% + 医药 20% + 制造 15% + 高股息 20%</p>
+                    <p class="text-xs mt-2 opacity-75">预期年化：15%~20%</p>
+                </div>
+                <div class="bg-white bg-opacity-20 rounded-lg p-4">
+                    <h4 class="font-bold mb-2">🛡️ 稳健型</h4>
+                    <p class="text-sm opacity-90">高股息 40% + 医药 20% + 制造 20% + 新能源 20%</p>
+                    <p class="text-xs mt-2 opacity-75">预期年化：10%~15%</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 投资主线 -->
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+            <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-4">🎯 2026 年投资主线</h3>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="border-b border-gray-200 dark:border-gray-700">
+                            <th class="text-left py-3 px-4 text-gray-600 dark:text-gray-400">主线</th>
+                            <th class="text-left py-3 px-4 text-gray-600 dark:text-gray-400">关键词</th>
+                            <th class="text-left py-3 px-4 text-gray-600 dark:text-gray-400">代表板块</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="border-b border-gray-100 dark:border-gray-700">
+                            <td class="py-3 px-4 font-medium">科技自立</td>
+                            <td class="py-3 px-4 text-gray-600 dark:text-gray-400">国产替代、自主可控</td>
+                            <td class="py-3 px-4 text-gray-600 dark:text-gray-400">半导体、工业母机</td>
+                        </tr>
+                        <tr class="border-b border-gray-100 dark:border-gray-700">
+                            <td class="py-3 px-4 font-medium">能源革命</td>
+                            <td class="py-3 px-4 text-gray-600 dark:text-gray-400">碳中和、储能</td>
+                            <td class="py-3 px-4 text-gray-600 dark:text-gray-400">新能源、光伏</td>
+                        </tr>
+                        <tr class="border-b border-gray-100 dark:border-gray-700">
+                            <td class="py-3 px-4 font-medium">人口结构</td>
+                            <td class="py-3 px-4 text-gray-600 dark:text-gray-400">老龄化、健康需求</td>
+                            <td class="py-3 px-4 text-gray-600 dark:text-gray-400">医药、养老</td>
+                        </tr>
+                        <tr class="border-b border-gray-100 dark:border-gray-700">
+                            <td class="py-3 px-4 font-medium">AI 变革</td>
+                            <td class="py-3 px-4 text-gray-600 dark:text-gray-400">大模型、算力</td>
+                            <td class="py-3 px-4 text-gray-600 dark:text-gray-400">AI 芯片、服务器</td>
+                        </tr>
+                        <tr>
+                            <td class="py-3 px-4 font-medium">价值重估</td>
+                            <td class="py-3 px-4 text-gray-600 dark:text-gray-400">高分红、央企</td>
+                            <td class="py-3 px-4 text-gray-600 dark:text-gray-400">中特估、银行</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        function sectorApp() {
+            return {
+                formatAmount(amount) {
+                    if (!amount) return '0 亿'
+                    if (amount >= 1e8) return (amount / 1e8).toFixed(2) + ' 亿'
+                    return amount.toFixed(2)
+                }
+            }
+        }
+    </script>
+</body>
+</html>
+

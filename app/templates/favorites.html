@@ -1,0 +1,211 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>自选股 - 股票分析助手</title>
+    <script src="/static/js/tailwind.js"></script>
+    <script defer src="/static/js/alpine.min.js"></script>
+    <style>[x-cloak] { display: none !important; }</style>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 min-h-screen" x-data="favoritesApp()" x-init="init()">
+    <!-- 导航栏 -->
+    <nav class="bg-white dark:bg-gray-800 shadow-lg">
+        <div class="container mx-auto px-4 py-4">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center space-x-2">
+                    <span class="text-2xl">⭐</span>
+                    <h1 class="text-xl font-bold text-gray-800 dark:text-white">自选股</h1>
+                </div>
+                <div class="flex space-x-1">
+                    <a href="/home" class="px-4 py-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300">首页</a>
+                    <a href="/sector" class="px-4 py-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300">热门板块</a>
+                    <a href="/screener" class="px-4 py-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300">智能选股</a>
+                    <a href="/favorites" class="px-4 py-2 rounded-lg bg-blue-500 text-white">自选股</a>
+                    <a href="/settings" class="px-4 py-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300">设置</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主内容区 -->
+    <main class="container mx-auto px-4 py-8">
+        <h2 class="text-3xl font-bold text-gray-800 dark:text-white mb-6">⭐ 我的自选股</h2>
+        
+        <!-- 添加自选 -->
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-8">
+            <div class="flex space-x-2">
+                <input 
+                    type="text" 
+                    x-model="newStock"
+                    @keydown.enter="addStock()"
+                    placeholder="输入股票代码或名称添加"
+                    class="flex-1 px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-white focus:border-blue-500 focus:outline-none"
+                >
+                <button @click="addStock()" :disabled="loading" class="px-6 py-3 bg-green-500 hover:bg-green-600 text-white rounded-lg font-semibold disabled:opacity-50">
+                    ➕ 添加
+                </button>
+            </div>
+        </div>
+
+        <!-- 批量操作 -->
+        <div x-show="favorites.length > 0" class="mb-4 flex justify-between items-center">
+            <span class="text-gray-600 dark:text-gray-400" x-text="favorites.length + ' 只股票'"></span>
+            <button @click="refreshAll()" :disabled="refreshing" class="px-4 py-2 text-blue-500 hover:text-blue-600">
+                <span x-show="!refreshing">🔄 刷新全部</span>
+                <span x-show="refreshing">⏳ 刷新中...</span>
+            </button>
+        </div>
+
+        <!-- 加载状态 -->
+        <div x-show="loading" x-cloak class="text-center py-8">
+            <div class="inline-block animate-spin text-4xl">⏳</div>
+        </div>
+
+        <!-- 错误信息 -->
+        <div x-show="error" x-cloak class="p-4 bg-red-100 dark:bg-red-900 rounded-lg mb-6">
+            <p class="text-red-700 dark:text-red-200" x-text="error"></p>
+        </div>
+
+        <!-- 自选列表 -->
+        <div x-show="favorites.length > 0" x-cloak class="grid gap-4">
+            <template x-for="(stock, index) in favorites" :key="stock.code || index">
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 hover:shadow-xl transition">
+                    <div class="flex justify-between items-center">
+                        <div class="flex items-center space-x-4">
+                            <button @click="removeStock(stock.code)" class="text-red-500 hover:text-red-600 text-xl">✕</button>
+                            <div>
+                                <h3 class="text-xl font-bold text-gray-800 dark:text-white" x-text="stock.name + ' (' + stock.code + ')'"></h3>
+                                <p class="text-sm text-gray-500 dark:text-gray-400" x-text="stock.market"></p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-2xl font-bold text-gray-800 dark:text-white" x-text="formatPrice(stock.price) + ' 元'"></p>
+                            <p class="text-lg" :class="(stock.change_pct || 0) >= 0 ? 'text-red-500' : 'text-green-500'" 
+                               x-text="stock.change_pct != null ? ((stock.change_pct >= 0 ? '+' : '') + stock.change_pct.toFixed(2) + '%') : '-'"></p>
+                        </div>
+                        <div class="flex space-x-2">
+                            <button @click="analyzeStock(stock.code)" class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm">
+                                📊 分析
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </template>
+        </div>
+
+        <!-- 空状态 -->
+        <div x-show="!loading && favorites.length === 0" x-cloak class="text-center py-12 bg-white dark:bg-gray-800 rounded-xl shadow-lg">
+            <div class="text-6xl mb-4">⭐</div>
+            <p class="text-xl text-gray-600 dark:text-gray-400 mb-2">暂无自选股</p>
+            <p class="text-gray-500 dark:text-gray-500">输入股票代码或名称添加到自选</p>
+        </div>
+    </main>
+
+    <script>
+        function favoritesApp() {
+            return {
+                newStock: '',
+                loading: false,
+                refreshing: false,
+                error: '',
+                favorites: [],
+                
+                async init() {
+                    await this.loadFavorites()
+                },
+                
+                async loadFavorites() {
+                    this.loading = true
+                    try {
+                        // 从 localStorage 读取
+                        const saved = localStorage.getItem('favorites')
+                        if (saved) {
+                            this.favorites = JSON.parse(saved)
+                            // 刷新数据
+                            await this.refreshAll()
+                        }
+                    } catch (err) {
+                        this.error = '加载失败：' + err.message
+                    } finally {
+                        this.loading = false
+                    }
+                },
+                
+                async addStock() {
+                    if (!this.newStock.trim()) return
+                    
+                    try {
+                        const res = await fetch('/api/stock/query', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ query: this.newStock })
+                        })
+                        
+                        const data = await res.json()
+                        
+                        if (data.success) {
+                            // 检查是否已存在
+                            const exists = this.favorites.find(f => f.code === data.data.code)
+                            if (exists) {
+                                this.error = '该股票已在自选列表中'
+                                return
+                            }
+                            
+                            this.favorites.unshift(data.data)
+                            this.saveFavorites()
+                            this.newStock = ''
+                            this.error = ''
+                        } else {
+                            this.error = '添加失败：未找到股票'
+                        }
+                    } catch (err) {
+                        this.error = '添加失败：' + err.message
+                    }
+                },
+                
+                removeStock(code) {
+                    this.favorites = this.favorites.filter(f => f.code !== code)
+                    this.saveFavorites()
+                },
+                
+                async refreshAll() {
+                    this.refreshing = true
+                    try {
+                        for (let i = 0; i < this.favorites.length; i++) {
+                            try {
+                                const res = await fetch('/api/stock/' + this.favorites[i].code)
+                                const data = await res.json()
+                                if (data.success) {
+                                    this.favorites[i] = data.data
+                                }
+                            } catch (e) {
+                                console.error('Refresh failed for', this.favorites[i].code)
+                            }
+                            // 避免请求过快
+                            await new Promise(r => setTimeout(r, 500))
+                        }
+                        this.saveFavorites()
+                    } finally {
+                        this.refreshing = false
+                    }
+                },
+                
+                saveFavorites() {
+                    localStorage.setItem('favorites', JSON.stringify(this.favorites))
+                },
+                
+                formatPrice(price) {
+                    return price ? price.toFixed(2) : '0.00'
+                },
+                
+                analyzeStock(code) {
+                    window.location.href = '/home?stock=' + code
+                }
+            }
+        }
+    </script>
+</body>
+</html>
+
+
