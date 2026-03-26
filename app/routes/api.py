@@ -74,7 +74,7 @@ async def analyze_stock(data: StockQuery) -> Dict[str, Any]:
         float_market_cap=quote_dict.get('float_market_cap', 0.0),
     )
     stock_data = StockData(quote=stock_quote)
-    report = ai_analyzer.analyze_stock(stock_data)
+    report = await ai_analyzer.analyze_stock(stock_data)
     
     return {
         "success": True,
