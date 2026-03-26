@@ -22,7 +22,8 @@ class MiaoXiangAPI:
     """东方财富妙想 API 封装"""
     
     BASE_DIR = Path(__file__).parent.parent.parent
-    MX_DIR = Path(r"C:\Users\admin\AppData\Roaming\npm\node_modules\openclaw\skills\mx_stocks_screener")
+    # 使用相对路径，支持跨平台部署
+    MX_DIR = BASE_DIR.parent.parent / "mx_stocks_screener"
     
     def __init__(self, api_key: Optional[str] = None):
         self.api_key = api_key or config.em_api_key

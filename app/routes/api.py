@@ -37,31 +37,36 @@ class SettingsUpdate(BaseModel):
 @router.post("/stock/query")
 async def query_stock(data: StockQuery) -> Dict[str, Any]:
     """查询股票数据"""
-    quote = await mx_api.query_stock(data.query, data.select_type)
+    # 使用腾讯 HTTP API（不依赖本地脚本）
+    quote = stock_service.get_stock_quote(data.query)
     
-    if not quote or not quote.name:
+    if not quote or not quote.get('name'):
         raise HTTPException(status_code=404, detail="未找到股票")
     
     return {
         "success": True,
-        "data": quote.to_dict()
+        "data": quote
     }
 
 
 @router.post("/stock/analyze")
 async def analyze_stock(data: StockQuery) -> Dict[str, Any]:
     """分析股票"""
-    quote = await mx_api.query_stock(data.query, data.select_type)
+    # 使用腾讯 HTTP API（不依赖本地脚本）
+    quote = stock_service.get_stock_quote(data.query)
     
-    if not quote or not quote.name:
+    if not quote or not quote.get('name'):
         raise HTTPException(status_code=404, detail="未找到股票")
     
-    report = ai_analyzer.analyze_stock(quote)
+    # 转换为 StockData 对象供 AI 分析器使用
+    from app.models.stock import StockData
+    stock_data = StockData(**quote)
+    report = ai_analyzer.analyze_stock(stock_data)
     
     return {
         "success": True,
         "data": {
-            "quote": quote.to_dict(),
+            "quote": quote,
             "report": report
         }
     }
