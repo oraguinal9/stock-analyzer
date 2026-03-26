@@ -51,7 +51,8 @@ class EastMoneyDataService:
                 "invt": "2",
             }
             
-            with httpx.Client(timeout=self.timeout) as client:
+            # 使用 follow_redirects=True 来处理 302 重定向
+            with httpx.Client(timeout=self.timeout, follow_redirects=True) as client:
                 resp = client.get(url, params=params, headers=self.headers)
                 resp.raise_for_status()
                 data = resp.json()
