@@ -6,7 +6,6 @@ services:
     region: oregon
     plan: free
     branch: main
-    rootDir: stock-analyzer-web
     buildCommand: pip install -r requirements.txt
     startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
     envVars:
@@ -21,5 +20,5 @@ services:
     healthCheckPath: /home
     disk:
       name: data
-      mountPath: /opt/render/project/src/data
+      mountPath: ./data
       sizeGB: 1
