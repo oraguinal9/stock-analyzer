@@ -8,7 +8,7 @@ from typing import Optional, Dict, Any, List
 
 from app.services.mx_api import MiaoXiangAPI, StockQuote
 from app.services.ai_analyzer import AIAnalyzer
-from app.services.stock_data import StockDataService, stock_data_service
+from app.services.em_data import EastMoneyDataService
 from app.utils.config import config
 from app.utils.logger import get_logger
 
@@ -19,7 +19,7 @@ router = APIRouter()
 # 初始化服务
 mx_api = MiaoXiangAPI()
 ai_analyzer = AIAnalyzer()
-stock_service = StockDataService()
+em_data = EastMoneyDataService()
 
 
 class StockQuery(BaseModel):
@@ -37,8 +37,8 @@ class SettingsUpdate(BaseModel):
 @router.post("/stock/query")
 async def query_stock(data: StockQuery) -> Dict[str, Any]:
     """查询股票数据"""
-    # 使用腾讯 HTTP API（不依赖本地脚本）
-    quote = stock_service.get_stock_quote(data.query)
+    # 使用东方财富 HTTP API
+    quote = em_data.get_stock_quote(data.query)
     
     if not quote or not quote.get('name'):
         raise HTTPException(status_code=404, detail="未找到股票")
@@ -52,8 +52,8 @@ async def query_stock(data: StockQuery) -> Dict[str, Any]:
 @router.post("/stock/analyze")
 async def analyze_stock(data: StockQuery) -> Dict[str, Any]:
     """分析股票"""
-    # 使用腾讯 HTTP API（不依赖本地脚本）
-    quote = stock_service.get_stock_quote(data.query)
+    # 使用东方财富 HTTP API
+    quote = em_data.get_stock_quote(data.query)
     
     if not quote or not quote.get('name'):
         raise HTTPException(status_code=404, detail="未找到股票")
