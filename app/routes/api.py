@@ -37,7 +37,7 @@ class SettingsUpdate(BaseModel):
 @router.post("/stock/query")
 async def query_stock(data: StockQuery) -> Dict[str, Any]:
     """查询股票数据"""
-    quote = mx_api.query_stock(data.query, data.select_type)
+    quote = await mx_api.query_stock(data.query, data.select_type)
     
     if not quote or not quote.name:
         raise HTTPException(status_code=404, detail="未找到股票")
@@ -51,7 +51,7 @@ async def query_stock(data: StockQuery) -> Dict[str, Any]:
 @router.post("/stock/analyze")
 async def analyze_stock(data: StockQuery) -> Dict[str, Any]:
     """分析股票"""
-    quote = mx_api.query_stock(data.query, data.select_type)
+    quote = await mx_api.query_stock(data.query, data.select_type)
     
     if not quote or not quote.name:
         raise HTTPException(status_code=404, detail="未找到股票")
